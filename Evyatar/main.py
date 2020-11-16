@@ -4,16 +4,18 @@ import pickle
 from scipy.signal import butter, lfilter
 import matplotlib.pyplot as plt
 import numpy as np
+import mne
 
 data_params = {
     'data_path': '..\\data\\dataset2',
     'pickle_path': '..\\data',
-    'use_pickle': True
+    'use_pickle': False
 }
 
 filter_params = {
     'sample_rate': 250,
-    'bandpass': [5, 48]
+    'bandpass': [5, 48],
+    'notch': 50.0
 }
 
 
@@ -78,41 +80,47 @@ def load_data(path, use_pickle, pickle_path):
 
     # Load data
     records_name = generate_record_names()  # names of all the sessions
-    windows = []  # list for all the windows
+    sessions = []  # list for all the sessions
     labels = []  # list for all the labels
 
     for session in tqdm(records_name):
 
-        p_signal = wfdb.io.rdrecord(path + '\\' + session).p_signal  # get the full signal of the session
+        sessions.append(wfdb.io.rdrecord(path + '\\' + session).p_signal)  # get the full signal of the session
 
-        window_index = wfdb.io.rdann(path + '\\' + session, 'win').sample  # get the indices of the windows
+        # window_index = wfdb.io.rdann(path + '\\' + session, 'win').sample  # get the indices of the windows
 
-        windows += session_to_windows(p_signal, window_index)  # append the current session's windows
+        # windows += session_to_windows(p_signal, window_index)  # append the current session's windows
 
         labels += get_labels(wfdb.io.rdann(path + '\\' + session, 'win').aux_note)
+        #     todo:
+    return sessions, labels
 
-    return windows, labels
 
-
-def preprocess_window(window, params):
+def preprocess_sessions(session, params):
 
     """
 
     :param params:
-    :param window: list with all the windows as ndarray
+    :param session: list with all the windows as ndarray
     :return:
     """
 
     bandpass = params['bandpass']
+    notch = params['notch']
     fs = params['sample_rate']
 
+    session = session.T  # transpose the window
+
     # Normalization (mean = 0, std = 1)
-    window = np.nan_to_num((window - window.mean(axis=0)) / window.std(axis=0))
+    session = np.nan_to_num((session - session.mean(axis=0)) / session.std(axis=0))
 
     # Bandpass filter
-    window = butter_bandpass_filter(window.T, bandpass[0], bandpass[1], fs)
+    session = butter_bandpass_filter(session, bandpass[0], bandpass[1], fs)
+    
+    # Notch filter
+    mne.filter.notch_filter(session, fs, notch)
 
-    return window.T
+    return session.T
 
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
@@ -133,11 +141,11 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
 
 if __name__ == '__main__':
 
-    windows, labels = load_data(path=data_params['data_path'],
+    sessions, labels = load_data(path=data_params['data_path'],
                                 use_pickle=data_params['use_pickle'],
                                 pickle_path=data_params['pickle_path'])
 
-    windows = [preprocess_window(w, filter_params) for w in windows]
+    sessions = [preprocess_sessions(s, filter_params) for s in sessions]
 
 
 
