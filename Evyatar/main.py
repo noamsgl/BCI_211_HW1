@@ -77,5 +77,13 @@ def load_data(path, use_pickle=False):
     return windows, labels
 
 
-windows, labels = load_data()
+def main():
+    windows, labels = load_data()
+
+
+if __name__ == '__main__':
+
+    main()
+
+
 
