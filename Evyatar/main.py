@@ -2,6 +2,12 @@ import wfdb
 from tqdm import tqdm
 import pickle
 
+data_params = {
+    'data_path': '..\\data\\dataset2',
+    'pickle_path': '..\\data',
+    'use_pickle': True
+}
+
 
 def generate_record_names():
     strings = []
@@ -45,19 +51,22 @@ def get_labels(raw_labels):
     return current_labels
 
 
-def load_data(path, use_pickle=False):
+def load_data(path, use_pickle, pickle_path):
 
     """
     create list of ndarray when each element is a window.
     create list of labels for each window.
+    :param pickle_path: path to the pickle path
+    :param use_pickle: bool if to use the pickle file
+    :param path: the path to the data directory
     :return: two lists, one of windows (ndarray) and one of labels (str)
     """
 
     # Load the pickle file
     if use_pickle:
 
-        return pickle.load(open(path + '\\windows.pickle', 'rb')),\
-               pickle.load(open(path + '\\labels.pickle', 'rb'))
+        return pickle.load(open(pickle_path + '\\windows.pickle', 'rb')),\
+               pickle.load(open(pickle_path + '\\labels.pickle', 'rb'))
 
     # Load data
     records_name = generate_record_names()  # names of all the sessions
@@ -72,18 +81,16 @@ def load_data(path, use_pickle=False):
 
         windows += session_to_windows(p_signal, window_index)  # append the current session's windows
 
-        labels += get_labels(wfdb.io.rdann('..\\data\\dataset2\\' + session, 'win').aux_note)
+        labels += get_labels(wfdb.io.rdann(path + '\\' + session, 'win').aux_note)
 
     return windows, labels
 
 
-def main():
-    windows, labels = load_data()
-
-
 if __name__ == '__main__':
 
-    main()
+    windows, labels = load_data(path=data_params['path'],
+                                use_pickle=data_params['use_pickle'],
+                                pickle_path=data_params['pickle_path'])
 
 
 
