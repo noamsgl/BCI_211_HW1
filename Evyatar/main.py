@@ -1,11 +1,19 @@
 import wfdb
 from tqdm import tqdm
 import pickle
+from scipy.signal import butter, lfilter
+import matplotlib.pyplot as plt
+import numpy as np
 
 data_params = {
     'data_path': '..\\data\\dataset2',
     'pickle_path': '..\\data',
     'use_pickle': True
+}
+
+filter_params = {
+    'sample_rate': 250,
+    'bandpass': [5, 48]
 }
 
 
@@ -86,11 +94,50 @@ def load_data(path, use_pickle, pickle_path):
     return windows, labels
 
 
+def preprocess_window(window, params):
+
+    """
+
+    :param params:
+    :param window: list with all the windows as ndarray
+    :return:
+    """
+
+    bandpass = params['bandpass']
+    fs = params['sample_rate']
+
+    # Normalization (mean = 0, std = 1)
+    window = np.nan_to_num((window - window.mean(axis=0)) / window.std(axis=0))
+
+    # Bandpass filter
+    window = butter_bandpass_filter(window.T, bandpass[0], bandpass[1], fs)
+
+    return window.T
+
+
+def butter_bandpass(lowcut, highcut, fs, order=5):
+
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype='band')
+    return b, a
+
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
+
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
+
 if __name__ == '__main__':
 
-    windows, labels = load_data(path=data_params['path'],
+    windows, labels = load_data(path=data_params['data_path'],
                                 use_pickle=data_params['use_pickle'],
                                 pickle_path=data_params['pickle_path'])
+
+    windows = [preprocess_window(w, filter_params) for w in windows]
 
 
 
