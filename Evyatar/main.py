@@ -1,7 +1,7 @@
 import wfdb
 from tqdm import tqdm
 import pickle
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, lfilter, welch
 import matplotlib.pyplot as plt
 import numpy as np
 import mne
