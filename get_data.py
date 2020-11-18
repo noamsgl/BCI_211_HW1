@@ -1,22 +1,36 @@
 import wfdb
+from sklearn import preprocessing
 from tqdm import tqdm
 import pickle
 from scipy.signal import butter, lfilter, welch
 import matplotlib.pyplot as plt
 import numpy as np
 import mne
+from sklearn.model_selection import train_test_split
 
 data_params = {
-    'data_path': '..\\data\\dataset2',
-    'pickle_path': {'X': '..\\data\\X.pickle',
-                    'y': '..\\data\\y.pickle'},
-    'use_pickle': True
+    'data_path': 'data\\dataset2',
+    'pickle_path': {'X': 'data\\X.pickle',
+                    'y': 'data\\y.pickle'},
+    'use_pickle': True,
+    'n_subject': 11
 }
 
 filter_params = {
     'sample_rate': 250,
     'bandpass': [5, 48],
     'notch': 50.0
+}
+
+features_params = {
+    'selected_channel': 125,  # 126-channel when index start at 0
+    'nfft': 512,
+    'welch_window': 'hamm'
+}
+
+train_params = {
+    'train_ratio': 0.85,
+    'random_state': 23,
 }
 
 
@@ -40,8 +54,7 @@ def session_to_windows(session, windows_index):
     windows = []
 
     for i in range(0, len(windows_index), 2):
-
-        windows.append(session[windows_index[i]: windows_index[i+1]])
+        windows.append(session[windows_index[i]: windows_index[i + 1]])
 
     return windows
 
@@ -56,14 +69,12 @@ def get_labels(raw_labels):
     current_labels = []
 
     for i in range(0, len(raw_labels), 2):
-
         current_labels.append(raw_labels[i])
 
     return current_labels
 
 
 def load_sessions(path, use_pickle):
-
     """
     create list of ndarray when each element is a session.
     :param use_pickle: if to use the pickle file (bool)
@@ -83,14 +94,12 @@ def load_sessions(path, use_pickle):
     loaded_sessions = []  # list for all the loaded sessions
 
     for session in tqdm(records_name):
-
         loaded_sessions.append(wfdb.io.rdrecord(path + '\\' + session).p_signal)  # get the full signal of the session
 
     return loaded_sessions
 
 
 def preprocess_sessions(raw_session, params):
-
     """
 
     :param raw_session: list with all the sessions as ndarray
@@ -114,7 +123,6 @@ def preprocess_sessions(raw_session, params):
     preprocessed_sessions = []
 
     for s in tqdm(raw_session):
-
         # transpose the session
         s = s.T
 
@@ -122,7 +130,8 @@ def preprocess_sessions(raw_session, params):
         s = np.nan_to_num((s - s.mean(axis=0)) / s.std(axis=0))
 
         # Bandpass filter
-        s = butter_bandpass_filter(s, bandpass[0], bandpass[1], fs)
+        s = mne.filter.filter_data(s, fs, bandpass[0], bandpass[1], verbose=False)
+        # s = butter_bandpass_filter(s, bandpass[0], bandpass[1], fs)
 
         # Notch filter
         s = mne.filter.notch_filter(s, fs, notch, verbose=False)
@@ -134,7 +143,6 @@ def preprocess_sessions(raw_session, params):
 
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
-
     nyq = 0.5 * fs
     low = lowcut / nyq
     high = highcut / nyq
@@ -143,14 +151,12 @@ def butter_bandpass(lowcut, highcut, fs, order=5):
 
 
 def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
-
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
     y = lfilter(b, a, data)
     return y
 
 
 def split_to_windows(sessions, path, pickle_path):
-
     """
     Split the pre-processed sessions into windows.
     The function also return list of the labels
@@ -173,7 +179,6 @@ def split_to_windows(sessions, path, pickle_path):
     labels = []
 
     for i, session in enumerate(records_name):
-
         window_index = wfdb.io.rdann(path + '\\' + session, 'win').sample  # get the indices of the windows
 
         windows += session_to_windows(sessions[i], window_index)  # append the current session's windows
@@ -183,8 +188,62 @@ def split_to_windows(sessions, path, pickle_path):
     return windows, labels
 
 
-if __name__ == '__main__':
+def feature_selection(windows):
+    """
+    This function select the feature and return new X list where each element is vector of features.
+    According to the article only the 126-channel was selected.
+    Then we used welch to get the power spectral density.
 
+    :param windows: list of ndarray
+    :return: list of vectors
+    """
+    print('\nSelecting features...')
+
+    # Params
+    sample_rate = filter_params['sample_rate']
+    channel = features_params['selected_channel']
+    nfft = features_params['nfft']
+    welch_window = features_params['welch_window']
+
+    features = []
+
+    for window in windows:
+        features.append(welch(window[channel], window=welch_window, fs=sample_rate, nfft=nfft)[1])
+
+    return features
+
+
+def encode_y(y):
+    """
+
+    :param y:
+    :return:
+    """
+
+    le = preprocessing.LabelEncoder()
+    le.fit(y)
+    y = le.transform(y)
+
+    return y
+
+
+def split_by_subjects(X, y, n_subjects):
+    """
+    Split X and y by the number of subjects, where each subject have X & y
+    :param n_subjects:
+    :param X:
+    :param y:
+    :return:
+    """
+
+    chunk_size = len(X) // n_subjects
+    X = [X[i:i + chunk_size] for i in range(0, len(X), chunk_size)]
+    y = [y[i:i + chunk_size] for i in range(0, len(y), chunk_size)]
+
+    return X, y
+
+
+def get_data():
     # Get the sessions of the data
     sessions = load_sessions(path=data_params['data_path'],
                              use_pickle=data_params['use_pickle'])
@@ -198,5 +257,24 @@ if __name__ == '__main__':
                             path=data_params['data_path'],
                             pickle_path=data_params['pickle_path'])
 
+    # Feature extraction & selection
+    X = feature_selection(X)
 
+    # Encode y vector
+    y = encode_y(y)
 
+    # Split dataset into n=11 subjects
+    X, y = split_by_subjects(X, y, data_params['n_subject'])
+
+    # Split into lists of train & test
+    X_train_lst, X_test_lst, y_train_lst, y_test_lst = [], [], [], []
+    for i in range(data_params['n_subject']):
+        X_train, X_test, y_train, y_test = train_test_split(X[i], y[i],
+                                                            train_size=train_params['train_ratio'],
+                                                            random_state=train_params['random_state'])
+        X_train_lst.append(X_train)
+        X_test_lst.append(X_test)
+        y_train_lst.append(y_train)
+        y_test_lst.append(y_test)
+
+    return X_train_lst, X_test_lst, y_train_lst, y_test_lst
