@@ -206,7 +206,7 @@ def feature_selection(windows):
 
     features = []
 
-    for window in tqdm(windows):
+    for window in windows:
         features.append(welch(window[channel], window=welch_window, fs=sample_rate, nfft=nfft)[1])
 
     return features
@@ -268,7 +268,7 @@ def get_data():
     # Split into lists of train & test
     X_train_lst, X_test_lst, y_train_lst, y_test_lst = [], [], [], []
     for i in range(data_params['n_subject']):
-        X_train, X_test, y_train, y_test = train_test_split(X, y,
+        X_train, X_test, y_train, y_test = train_test_split(X[i], y[i],
                                                             train_size=train_params['train_ratio'],
                                                             random_state=train_params['random_state'])
         X_train_lst.append(X_train)
