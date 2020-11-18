@@ -29,7 +29,7 @@ features_params = {
 }
 
 train_params = {
-    'train_ratio': 0.7,
+    'train_ratio': 0.85,
     'random_state': 23,
 }
 
@@ -130,7 +130,8 @@ def preprocess_sessions(raw_session, params):
         s = np.nan_to_num((s - s.mean(axis=0)) / s.std(axis=0))
 
         # Bandpass filter
-        s = butter_bandpass_filter(s, bandpass[0], bandpass[1], fs)
+        s = mne.filter.filter_data(s, fs, bandpass[0], bandpass[1], verbose=False)
+        # s = butter_bandpass_filter(s, bandpass[0], bandpass[1], fs)
 
         # Notch filter
         s = mne.filter.notch_filter(s, fs, notch, verbose=False)
