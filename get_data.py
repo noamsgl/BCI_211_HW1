@@ -1,4 +1,5 @@
 import wfdb
+from sklearn import preprocessing
 from tqdm import tqdm
 import pickle
 from scipy.signal import butter, lfilter, welch
@@ -8,10 +9,11 @@ import mne
 from sklearn.model_selection import train_test_split
 
 data_params = {
-    'data_path': '..\\data\\dataset2',
-    'pickle_path': {'X': '..\\data\\X.pickle',
-                    'y': '..\\data\\y.pickle'},
-    'use_pickle': True
+    'data_path': 'data\\dataset2',
+    'pickle_path': {'X': 'data\\X.pickle',
+                    'y': 'data\\y.pickle'},
+    'use_pickle': True,
+    'n_subject': 11
 }
 
 filter_params = {
@@ -210,6 +212,36 @@ def feature_selection(windows):
     return features
 
 
+def encode_y(y):
+    """
+
+    :param y:
+    :return:
+    """
+
+    le = preprocessing.LabelEncoder()
+    le.fit(y)
+    y = le.transform(y)
+
+    return y
+
+
+def split_by_subjects(X, y, n_subjects):
+    """
+    Split X and y by the number of subjects, where each subject have X & y
+    :param n_subjects:
+    :param X:
+    :param y:
+    :return:
+    """
+
+    chunk_size = len(X) // n_subjects
+    X = [X[i:i + chunk_size] for i in range(0, len(X), chunk_size)]
+    y = [y[i:i + chunk_size] for i in range(0, len(y), chunk_size)]
+
+    return X, y
+
+
 def get_data():
     # Get the sessions of the data
     sessions = load_sessions(path=data_params['data_path'],
@@ -227,9 +259,21 @@ def get_data():
     # Feature extraction & selection
     X = feature_selection(X)
 
-    # Split into train & test
-    X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                        train_size=train_params['train_ratio'],
-                                                        random_state=train_params['random_state'])
+    # Encode y vector
+    y = encode_y(y)
 
-    return X_train, X_test, y_train, y_test
+    # Split dataset into n=11 subjects
+    X, y = split_by_subjects(X, y, data_params['n_subject'])
+
+    # Split into lists of train & test
+    X_train_lst, X_test_lst, y_train_lst, y_test_lst = [], [], [], []
+    for i in range(data_params['n_subject']):
+        X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                            train_size=train_params['train_ratio'],
+                                                            random_state=train_params['random_state'])
+        X_train_lst.append(X_train)
+        X_test_lst.append(X_test)
+        y_train_lst.append(y_train)
+        y_test_lst.append(y_test)
+
+    return X_train_lst, X_test_lst, y_train_lst, y_test_lst
