@@ -1,7 +1,7 @@
 import wfdb
 from tqdm import tqdm
 import pickle
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, lfilter, welch
 import matplotlib.pyplot as plt
 import numpy as np
 import mne
@@ -17,6 +17,12 @@ filter_params = {
     'sample_rate': 250,
     'bandpass': [5, 48],
     'notch': 50.0
+}
+
+features_params = {
+    'selected_channel': 125,  # 126-channel when index start at 0
+    'nfft': 512,
+    'welch_window': 'hamm'
 }
 
 
@@ -183,6 +189,33 @@ def split_to_windows(sessions, path, pickle_path):
     return windows, labels
 
 
+def feature_selection(windows):
+
+    """
+    This function select the feature and return new X list where each element is vector of features.
+    According to the article only the 126-channel was selected.
+    Then we used welch to get the power spectral density.
+
+    :param windows: list of ndarray
+    :return: list of vectors
+    """
+    print('\nSelecting features...')
+
+    # Params
+    sample_rate = filter_params['sample_rate']
+    channel = features_params['selected_channel']
+    nfft = features_params['nfft']
+    welch_window = features_params['welch_window']
+
+    features = []
+
+    for window in tqdm(windows):
+
+        features.append(welch(window[channel], window=welch_window, fs=sample_rate, nfft=nfft)[1])
+
+    return features
+
+
 if __name__ == '__main__':
 
     # Get the sessions of the data
@@ -197,6 +230,9 @@ if __name__ == '__main__':
     X, y = split_to_windows(sessions=sessions,
                             path=data_params['data_path'],
                             pickle_path=data_params['pickle_path'])
+
+    # Feature extraction & selection
+    X = feature_selection(X)
 
 
 
