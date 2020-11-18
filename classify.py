@@ -15,23 +15,23 @@ if __name__ == '__main__':
         plt.close()
     print(y_test_lst[0][:10])
 
-    # scores = []
-    #
-    # for i in range(len(X_test_lst)):
-    #
-    #     clf = KNeighborsClassifier(n_neighbors=5)
-    #
-    #     clf.fit(X_train_lst[i], y_train_lst[i])
-    #
-    #     scores.append(round(clf.score(X_test_lst[i], y_test_lst[i]), 3))
-    #
-    #     y_pred = clf.predict(X_test_lst[i])
-    #
-    #     plt.matshow(confusion_matrix(y_test_lst[i], y_pred))
-    #     plt.show()
-    #
-    # print(scores)
-    #
-    # print(np.mean(scores))
+    scores = []
+
+    for i in range(len(X_test_lst)):
+
+        clf = KNeighborsClassifier(n_neighbors=5)
+
+        clf.fit(X_train_lst[i], y_train_lst[i])
+
+        scores.append(round(clf.score(X_test_lst[i], y_test_lst[i]), 3))
+
+        y_pred = clf.predict(X_test_lst[i])
+
+        plt.matshow(confusion_matrix(y_test_lst[i], y_pred))
+        plt.show()
+
+    print(scores)
+
+    print(np.mean(scores))
 
 

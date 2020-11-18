@@ -29,7 +29,7 @@ features_params = {
 }
 
 train_params = {
-    'train_ratio': 0.85,
+    'train_ratio': 0.7,
     'random_state': 23,
 }
 
@@ -256,6 +256,11 @@ def get_data():
     X, y = split_to_windows(sessions=sessions,
                             path=data_params['data_path'],
                             pickle_path=data_params['pickle_path'])
+
+    # pickle dump
+    pickle.dump(X, open(data_params['pickle_path']['X'], 'wb'))
+    pickle.dump(y, open(data_params['pickle_path']['y'], 'wb'))
+
 
     # Feature extraction & selection
     X = feature_selection(X)
