@@ -11,6 +11,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.decomposition import PCA
 
 cv_params = {
     'C': [1, 10, 100, 1000],
@@ -25,6 +26,7 @@ def train_model(X_train, y_train):
 
 
 def main():
+
     # Get data and update input shape
     X_train, X_test, y_train, y_test = get_CNN_data()
 
@@ -36,6 +38,14 @@ def main():
     x_train_net = resnet.predict(np.asarray(X_train))
     x_test_net = resnet.predict(np.asarray(X_test))
 
+    # Dim reductions using PCA
+    pca = PCA(n_components=100)
+    x_train_net = pca.fit_transform(x_train_net)
+    x_test_net = pca.transform(x_test_net)
+
+    # Scale the data
+
+
     # Train model
     model = train_model(x_train_net, y_train)
 
@@ -44,9 +54,9 @@ def main():
     # clf = GridSearchCV(svm, cv_params)
 
     # Test
-    # print('Predictions: {}'.format(model.predict(x_test_net)))
-    # print('True Labels: {}'.format(np.asarray(y_test)))
-    # print('Score: {}'.format(model.score(x_test_net, y_test)))
+    print('Predictions: {}'.format(model.predict(x_test_net)))
+    print('True Labels: {}'.format(np.asarray(y_test)))
+    print('Score: {}'.format(model.score(x_test_net, y_test)))
 
 
 if __name__ == '__main__':
