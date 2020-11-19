@@ -1,36 +1,38 @@
 import scipy.io as sio
 import numpy as np
 import matplotlib.pyplot as plt
-from keras.applications.resnet_v2 import preprocess_input
+from sklearn.model_selection import train_test_split
 import cv2
+import pickle
 
 data_params = {
 
-    'paths': {'X_train': 'data/MI/CNN/X_train.mat',
-              'X_test': 'data/MI/CNN/X_test.mat',
-              'y_train': 'data/MI/CNN/y_train.mat',
-              'y_test': 'data/MI/CNN/y_test.mat', },
-    'image_size': (32, 32)
+    'paths': {'X': 'data/MI/CNN/X.pickle',
+              'y': 'data/MI/CNN/y.pickle'},
+    'image_size': (32, 32),
+    'train_ratio': 0.85,
+    'random_state': 23,
 }
 
 
-def get_data(paths):
+def get_data(params):
+
     """
     This function load the mat files and convert them from 3d matrix to list of ndarray
     :return: 4 lists for X and y train and test.
     """
 
-    # Load the mat files
-    # Note: I saved the mat files with var name of X & y, if your var names are different you
-    # need to change it.
-    X_test = sio.loadmat(paths['X_test'])['X']
-    X_train = sio.loadmat(paths['X_train'])['X']
-    y_test = sio.loadmat(paths['y_test'])['y'].tolist()[0]
-    y_train = sio.loadmat(paths['y_train'])['y'].tolist()[0]
+    # Params
+    paths = params['paths']
+    train_ratio = params['train_ratio']
+    random_state = params['random_state']
 
-    # Change the X files to be list instead of 3d arrays
-    X_train = [X_train[i] for i in range(np.shape(X_train)[0])]
-    X_test = [X_test[i] for i in range(np.shape(X_test)[0])]
+    # Load the pickle file with the data
+    X = pickle.load(open(paths['X'], 'rb'))
+    y = pickle.load(open(paths['y'], 'rb'))
+
+    # Split the data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=train_ratio, random_state=random_state)
 
     return X_train, X_test, y_train, y_test
 
@@ -66,7 +68,7 @@ def get_CNN_data():
     :return:
     """
 
-    X_train, X_test, y_train, y_test = get_data(data_params['paths'])
+    X_train, X_test, y_train, y_test = get_data(data_params)
 
     # Pre-process the X data
     X_train = preprocess_X(X_train, data_params['image_size'])

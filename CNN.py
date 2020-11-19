@@ -29,7 +29,6 @@ def train_model(X_train, y_train):
     return clf.fit(X_train, y_train)
 
 
-
 def main():
 
     # Get data and update input shape
