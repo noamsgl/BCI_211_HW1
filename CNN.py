@@ -12,6 +12,7 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 cv_params = {
     'C': [1, 10, 100, 1000],
@@ -22,7 +23,11 @@ cv_params = {
 def train_model(X_train, y_train):
 
     clf = SVC(C=100, gamma=0.00001)
+    # clf = RandomForestClassifier(n_estimators=100)
+    # clf = KNeighborsClassifier(n_neighbors=50)
+
     return clf.fit(X_train, y_train)
+
 
 
 def main():
@@ -44,7 +49,9 @@ def main():
     x_test_net = pca.transform(x_test_net)
 
     # Scale the data
-
+    # scaler = StandardScaler()
+    # x_train_net = scaler.fit_transform(x_train_net)
+    # x_test_net = scaler.transform(x_test_net)
 
     # Train model
     model = train_model(x_train_net, y_train)
