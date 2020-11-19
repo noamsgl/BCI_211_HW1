@@ -40,7 +40,7 @@ def train_net(X_train, y_train, params):
 
 def train_model(X_train, y_train):
 
-    clf = RandomForestClassifier(n_estimators=200)
+    clf = SVC()
     return clf.fit(X_train, y_train)
 
 

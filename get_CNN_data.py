@@ -48,7 +48,9 @@ def preprocess_X(X, image_size):
     # X = [preprocess_input(x) for x in X]
 
     # Resize X
-    X = [cv2.resize(x, image_size) for x in X]
+    X = [cv2.resize(x, image_size, interpolation=cv2.INTER_NEAREST) for x in X]
+    # plt.imshow(X[0])
+    # plt.show()
 
     # Change 1 channel to 3 channel
     X = [cv2.merge((x, x, x)) for x in X]
