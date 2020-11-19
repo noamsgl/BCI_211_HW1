@@ -55,6 +55,7 @@ def train_model(X_train, y_train, params):
 
 
 def main():
+
     # Get data and update input shape
     X_train, X_test, y_train, y_test = get_CNN_data()
     model_params['input_shape'] = X_train[0].shape
