@@ -32,10 +32,8 @@ def train_net(X_train, y_train, params):
     batch_size = params['batch_size']
 
     # Init the resnet
-    resnet = resnet_v2.ResNet50V2(include_top=True, weights='imagenet',
+    resnet = resnet_v2.ResNet50V2(include_top=False, weights='imagenet',
                                   pooling='avg', input_shape=input_shape)
-
-    return resnet
 
     # Make all layers un-trainable
     for layer in resnet.layers:
@@ -82,19 +80,11 @@ def main():
     X_train, X_test, y_train, y_test = get_CNN_data()
     model_params['input_shape'] = X_train[0].shape
 
-    # Get ResNet
+    # Train net
     net = train_net(X_train, y_train, model_params)
 
-    # Train model
-    x_train_net = net.predict(np.asarray(X_train))
-    classes = find_classes(x_train_net)  # find interesting classes
-    model = train_model(x_train_net[:, classes], y_train)
-
     # Test
-    x_test_net = net.predict(np.asarray(X_test))[:, classes]
-    print('Predictions: {}'.format(model.predict(x_test_net)))
-    print('True Labels: {}'.format(np.asarray(y_test)))
-    print('Score: {}'.format(model.score(x_test_net, y_test)))
+    net.score(np.asarray(X_test), np.asarray(y_test))
 
 
 if __name__ == '__main__':

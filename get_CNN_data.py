@@ -10,6 +10,7 @@ data_params = {
               'X_test': 'data/MI/CNN/X_test.mat',
               'y_train': 'data/MI/CNN/y_train.mat',
               'y_test': 'data/MI/CNN/y_test.mat', },
+    'image_size': (32, 32)
 }
 
 
@@ -34,10 +35,11 @@ def get_data(paths):
     return X_train, X_test, y_train, y_test
 
 
-def preprocess_X(X):
+def preprocess_X(X, image_size):
     """
     This function preprocess X data
 
+    :param image_size: image size to resize
     :param X: the data to scale
     :return: scaled X
     """
@@ -46,7 +48,7 @@ def preprocess_X(X):
     # X = [preprocess_input(x) for x in X]
 
     # Resize X
-    X = [cv2.resize(x, (224, 224)) for x in X]
+    X = [cv2.resize(x, image_size) for x in X]
 
     # Change 1 channel to 3 channel
     X = [cv2.merge((x, x, x)) for x in X]
@@ -63,8 +65,8 @@ def get_CNN_data():
     X_train, X_test, y_train, y_test = get_data(data_params['paths'])
 
     # Pre-process the X data
-    X_train = preprocess_X(X_train)
-    X_test = preprocess_X(X_test)
+    X_train = preprocess_X(X_train, data_params['image_size'])
+    X_test = preprocess_X(X_test, data_params['image_size'])
 
     return X_train, X_test, y_train, y_test
 

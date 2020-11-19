@@ -40,35 +40,24 @@ def train_net(X_train, y_train, params):
 
 def train_model(X_train, y_train):
 
-    clf = SVC()
+    clf = RandomForestClassifier(n_estimators=200)
     return clf.fit(X_train, y_train)
-
-
-def find_classes(X):
-
-    means = np.mean(X, axis=0)
-
-    arg_sort = means.argsort()[::-1][:50]
-
-    return arg_sort
 
 
 def main():
     # Get data and update input shape
     X_train, X_test, y_train, y_test = get_CNN_data()
-    model_params['input_shape'] = X_train[0].shape
 
     # Get ResNet
-    resnet = resnet_v2.ResNet50V2(include_top=True, weights='imagenet',
-                                  pooling='avg', input_shape=X_train[0].shape)
+    resnet = resnet_v2.ResNet50V2(include_top=False, weights='imagenet',
+                                  pooling='max', input_shape=X_train[0].shape)
 
     # Train model
     x_train_net = resnet.predict(np.asarray(X_train))
-    classes = find_classes(x_train_net)  # find interesting classes
-    model = train_model(x_train_net[:, classes], y_train)
+    model = train_model(x_train_net, y_train)
 
     # Test
-    x_test_net = resnet.predict(np.asarray(X_test))[:, classes]
+    x_test_net = resnet.predict(np.asarray(X_test))
     print('Predictions: {}'.format(model.predict(x_test_net)))
     print('True Labels: {}'.format(np.asarray(y_test)))
     print('Score: {}'.format(model.score(x_test_net, y_test)))
