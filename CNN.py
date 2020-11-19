@@ -20,34 +20,34 @@ cv_params = {
 
 def train_model(X_train, y_train):
 
-    clf = SVC()
+    clf = SVC(C=100, gamma=0.00001)
     return clf.fit(X_train, y_train)
 
 
-# def main():
-# Get data and update input shape
-X_train, X_test, y_train, y_test = get_CNN_data()
+def main():
+    # Get data and update input shape
+    X_train, X_test, y_train, y_test = get_CNN_data()
 
-# Get ResNet
-resnet = resnet_v2.ResNet50V2(include_top=False, weights='imagenet',
-                              pooling='avg', input_shape=X_train[0].shape)
+    # Get ResNet
+    resnet = resnet_v2.ResNet50V2(include_top=False, weights='imagenet',
+                                  pooling='avg', input_shape=X_train[0].shape)
 
-# Feature extraction using ResNet
-x_train_net = resnet.predict(np.asarray(X_train))
-x_test_net = resnet.predict(np.asarray(X_test))
+    # Feature extraction using ResNet
+    x_train_net = resnet.predict(np.asarray(X_train))
+    x_test_net = resnet.predict(np.asarray(X_test))
 
-# Train model
-# model = train_model(x_train_net, y_train)
+    # Train model
+    model = train_model(x_train_net, y_train)
 
-# Cross-validate model
-svm = SVC()
-clf = GridSearchCV(svm, cv_params)
+    # Cross-validate model
+    # svm = SVC()
+    # clf = GridSearchCV(svm, cv_params)
 
-# Test
-# print('Predictions: {}'.format(model.predict(x_test_net)))
-# print('True Labels: {}'.format(np.asarray(y_test)))
-# print('Score: {}'.format(model.score(x_test_net, y_test)))
+    # Test
+    # print('Predictions: {}'.format(model.predict(x_test_net)))
+    # print('True Labels: {}'.format(np.asarray(y_test)))
+    # print('Score: {}'.format(model.score(x_test_net, y_test)))
 
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
