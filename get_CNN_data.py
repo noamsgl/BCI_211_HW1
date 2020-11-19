@@ -24,8 +24,8 @@ def get_data(paths):
     # need to change it.
     X_test = sio.loadmat(paths['X_test'])['X']
     X_train = sio.loadmat(paths['X_train'])['X']
-    y_test = sio.loadmat(paths['y_test'])['y']
-    y_train = sio.loadmat(paths['y_train'])['y']
+    y_test = sio.loadmat(paths['y_test'])['y'].tolist()[0]
+    y_train = sio.loadmat(paths['y_train'])['y'].tolist()[0]
 
     # Change the X files to be list instead of 3d arrays
     X_train = [X_train[i] for i in range(np.shape(X_train)[0])]
@@ -36,17 +36,17 @@ def get_data(paths):
 
 def preprocess_X(X):
     """
-    This function normalize each column to be between 0 to 1.
+    This function preprocess X data
 
     :param X: the data to scale
     :return: scaled X
     """
 
     # Scale using resnet pre-process function
-    X = [preprocess_input(x) for x in X]
+    # X = [preprocess_input(x) for x in X]
 
-    # Add padding to X
-    X = [np.pad(x, (16, 16), 'constant') for x in X]
+    # Resize X
+    X = [cv2.resize(x, (224, 224)) for x in X]
 
     # Change 1 channel to 3 channel
     X = [cv2.merge((x, x, x)) for x in X]

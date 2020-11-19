@@ -37,6 +37,29 @@ def train_net(X_train, y_train, params):
 
     return resnet
 
+    # Make all layers un-trainable
+    for layer in resnet.layers:
+        layer.trainable = False
+
+    # Add resnet to your net with some more layers
+    net = Sequential()
+    net.add(resnet)
+    net.add(Dropout(0.5))
+    net.add(Dense(1, activation='sigmoid'))
+
+    # Compile net
+    net.compile(loss='binary_crossentropy',
+                optimizer=optimizers.RMSprop(lr=2e-5),
+                metrics=['accuracy'])
+
+    # Print the net summary
+    net.summary()
+
+    # Fit the net
+    net.fit(np.asarray(X_train), np.asarray(y_train), batch_size=batch_size, epochs=epochs)
+
+    return net
+
 
 def train_model(X_train, y_train):
 
@@ -54,21 +77,21 @@ def find_classes(X):
 
 
 def main():
+
     # Get data and update input shape
     X_train, X_test, y_train, y_test = get_CNN_data()
     model_params['input_shape'] = X_train[0].shape
 
     # Get ResNet
-    resnet = resnet_v2.ResNet50V2(include_top=True, weights='imagenet',
-                                  pooling='avg', input_shape=X_train[0].shape)
+    net = train_net(X_train, y_train, model_params)
 
     # Train model
-    x_train_net = resnet.predict(np.asarray(X_train))
+    x_train_net = net.predict(np.asarray(X_train))
     classes = find_classes(x_train_net)  # find interesting classes
     model = train_model(x_train_net[:, classes], y_train)
 
     # Test
-    x_test_net = resnet.predict(np.asarray(X_test))[:, classes]
+    x_test_net = net.predict(np.asarray(X_test))[:, classes]
     print('Predictions: {}'.format(model.predict(x_test_net)))
     print('True Labels: {}'.format(np.asarray(y_test)))
     print('Score: {}'.format(model.score(x_test_net, y_test)))
