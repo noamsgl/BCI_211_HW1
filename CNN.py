@@ -6,7 +6,7 @@ from keras.layers import Dense, Dropout
 from keras import optimizers
 
 model_params = {
-    'input_shape': None,
+    'input_shape': (786, 2, 1),
     'batch_size': 32,
     'epochs': 50,
 }

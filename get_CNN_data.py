@@ -2,6 +2,7 @@ import scipy.io as sio
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.applications.resnet_v2 import preprocess_input
+import cv2
 
 data_params = {
 
@@ -33,7 +34,7 @@ def get_data(paths):
     return X_train, X_test, y_train, y_test
 
 
-def scale_data(X):
+def preprocess_X(X):
     """
     This function normalize each column to be between 0 to 1.
 
@@ -41,7 +42,16 @@ def scale_data(X):
     :return: scaled X
     """
 
-    pass
+    # Scale using resnet pre-process function
+    X = [preprocess_input(x) for x in X]
+
+    # Add padding to X
+    X = [np.pad(x, (16, 16), 'constant') for x in X]
+
+    # Change 1 channel to 3 channel
+    X = [cv2.merge((x, x, x)) for x in X]
+
+    return X
 
 
 def get_CNN_data():
@@ -53,9 +63,8 @@ def get_CNN_data():
     X_train, X_test, y_train, y_test = get_data(data_params['paths'])
 
     # Pre-process the X data
-    X_train = [preprocess_input(x) for x in X_train]
-    X_test = [preprocess_input(x) for x in X_test]
+    X_train = preprocess_X(X_train)
+    X_test = preprocess_X(X_test)
 
     return X_train, X_test, y_train, y_test
 
-# X_train, X_test, y_train, y_test = get_CNN_data()

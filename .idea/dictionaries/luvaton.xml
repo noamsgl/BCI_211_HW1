@@ -2,6 +2,7 @@
   <dictionary name="luvaton">
     <words>
       <w>ndarray</w>
+      <w>preprocess</w>
     </words>
   </dictionary>
 </component>
