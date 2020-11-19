@@ -48,7 +48,9 @@ def preprocess_X(X, image_size):
     # X = [preprocess_input(x) for x in X]
 
     # Resize X
-    X = [cv2.resize(x, image_size, interpolation=cv2.INTER_NEAREST) for x in X]
+    X = [cv2.resize(x, image_size, interpolation=cv2.INTER_AREA) for x in X]
+
+    # Debug - show X after resize
     # plt.imshow(X[0])
     # plt.show()
 
