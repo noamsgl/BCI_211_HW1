@@ -22,16 +22,17 @@ cv_params = {
 
 def train_model(X_train, y_train):
 
-    clf = SVC(C=100, gamma=0.00001)
-    # clf = RandomForestClassifier(n_estimators=100)
-    # clf = KNeighborsClassifier(n_neighbors=50)
+    clf = SVC(C=100, gamma=0.00001)  # SVM
+    # clf = RandomForestClassifier(n_estimators=100)  # Random Forest
+    # clf = KNeighborsClassifier(n_neighbors=50)  # KNN
+    # clf = DecisionTreeClassifier()  # Decision Tree
 
     return clf.fit(X_train, y_train)
 
 
 def main():
 
-    # Get data and update input shape
+    # Get data
     X_train, X_test, y_train, y_test = get_CNN_data()
 
     # Get ResNet
