@@ -3,6 +3,8 @@
     <words>
       <w>ndarray</w>
       <w>preprocess</w>
+      <w>resnet</w>
+      <w>scaler</w>
     </words>
   </dictionary>
 </component>
