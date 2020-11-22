@@ -243,6 +243,27 @@ def split_by_subjects(X, y, n_subjects):
     return X, y
 
 
+def split_data(X, y):
+    """
+    This function split the X and y into train and test.
+    X and y need to be split by subjects.
+    :param X:
+    :param y:
+    :return:
+    """
+    X_train_lst, X_test_lst, y_train_lst, y_test_lst = [], [], [], []
+    for i in range(data_params['n_subject']):
+        X_train, X_test, y_train, y_test = train_test_split(X[i], y[i],
+                                                            train_size=train_params['train_ratio'],
+                                                            random_state=train_params['random_state'])
+        X_train_lst.append(X_train)
+        X_test_lst.append(X_test)
+        y_train_lst.append(y_train)
+        y_test_lst.append(y_test)
+
+    return X_train_lst, X_test_lst, y_train_lst, y_test_lst
+
+
 def get_data():
     # Get the sessions of the data
     sessions = load_sessions(path=data_params['data_path'],
@@ -257,10 +278,9 @@ def get_data():
                             path=data_params['data_path'],
                             pickle_path=data_params['pickle_path'])
 
-    # pickle dump
+    # Optional - pickle dump
     pickle.dump(X, open(data_params['pickle_path']['X'], 'wb'))
     pickle.dump(y, open(data_params['pickle_path']['y'], 'wb'))
-
 
     # Feature extraction & selection
     X = feature_selection(X)
@@ -272,14 +292,6 @@ def get_data():
     X, y = split_by_subjects(X, y, data_params['n_subject'])
 
     # Split into lists of train & test
-    X_train_lst, X_test_lst, y_train_lst, y_test_lst = [], [], [], []
-    for i in range(data_params['n_subject']):
-        X_train, X_test, y_train, y_test = train_test_split(X[i], y[i],
-                                                            train_size=train_params['train_ratio'],
-                                                            random_state=train_params['random_state'])
-        X_train_lst.append(X_train)
-        X_test_lst.append(X_test)
-        y_train_lst.append(y_train)
-        y_test_lst.append(y_test)
+    X_train_lst, X_test_lst, y_train_lst, y_test_lst = split_data(X, y)
 
     return X_train_lst, X_test_lst, y_train_lst, y_test_lst
